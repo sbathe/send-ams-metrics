@@ -1,7 +1,12 @@
-#!/usr/local/bin/python3
-import requests, datetime, json
+#!/usr/bin/env python
+import requests, datetime, json, sys
 import mysql.connector as mysql
-import config
+
+if len(sys.argv) < 2:
+    print "Need the location for config"
+    sys.exit(1)
+
+config = json.load(open(sys.argv[1]))
 
 # Connect to db and get db status, flatten and merge that
 db = mysql.connect(
@@ -32,9 +37,9 @@ status = dict(cursor.fetchall())
 metrics = dict()
 for k in keys_required:
     metrics[k] = status[k]
-metrics['Innodb_buffer_pool_pages_total_bytes'] = metrics['Innodb_buffer_pool_pages_total'] * metrics['Innodb_page_size']
-metrics['buffer_pool_usage_ratio'] = (metrics['Innodb_buffer_pool_pages_total'] - metrics['Innodb_buffer_pool_pages_free'])/metrics['Innodb_buffer_pool_pages_total']
-metrics['mysql_writes'] = metrics['Com_insert'] + metrics['Com_update'] + metrics['Com_delete']
+metrics['Innodb_buffer_pool_pages_total_bytes'] = float(metrics['Innodb_buffer_pool_pages_total']) * float(metrics['Innodb_page_size'])
+metrics['buffer_pool_usage_ratio'] = (float(metrics['Innodb_buffer_pool_pages_total']) - float(metrics['Innodb_buffer_pool_pages_free']))/float(metrics['Innodb_buffer_pool_pages_total'])
+metrics['mysql_writes'] = float(metrics['Com_insert']) + float(metrics['Com_update']) + float(metrics['Com_delete'])
 
 cursor.execute(per_schema_errors)
 errors = dict(cursor.fetchall())
